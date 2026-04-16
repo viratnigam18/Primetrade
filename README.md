@@ -2,8 +2,25 @@
 
 ![Python](https://img.shields.io/badge/Python-3.10%2B-blue)
 ![License](https://img.shields.io/badge/License-MIT-green)
+![FastAPI](https://img.shields.io/badge/FastAPI-0.115-009688)
 
-A production-grade command-line trading bot for the Binance Futures Testnet. Place, view, and cancel futures orders through an interactive Rich-powered CLI with full input validation, structured logging, and comprehensive test coverage.
+A production-grade command-line trading bot for the Binance Futures Testnet. Place, view, and cancel futures orders through an interactive Rich-powered CLI with full input validation, structured logging, and comprehensive test coverage. Includes a **lightweight web dashboard** for browser-based trading.
+
+---
+
+## Screenshots
+
+### CLI — Place Order
+
+![Place Order](screenshots/cli_place_order.png)
+
+### CLI — View Open Orders
+
+![View Orders](screenshots/cli_view_orders.png)
+
+### CLI — Cancel Order & Error Handling
+
+![Cancel Order](screenshots/cli_cancel_order.png)
 
 ---
 
@@ -125,6 +142,64 @@ python cli.py cancel-order --symbol BTCUSDT --order-id 100002
 
 ---
 
+## Web Dashboard (Bonus Feature)
+
+A lightweight browser-based trading interface built with **FastAPI** that reuses the existing `bot/` modules with zero business logic duplication.
+
+### Launch the dashboard
+
+```bash
+python -m uvicorn web.app:app --reload --port 8000
+```
+
+Then open [http://localhost:8000](http://localhost:8000) in your browser.
+
+### Features
+
+| Feature | Description |
+|---|---|
+| **Order placement** | Form with BUY/SELL toggle, order type selector, and conditional price fields |
+| **Live orders table** | Auto-refreshes every 10 seconds; filter by symbol |
+| **Cancel orders** | One-click cancel with confirmation dialog |
+| **Dark terminal theme** | Premium trading-grade aesthetic with glassmorphism and glow effects |
+| **Real-time clock** | Live UTC clock in the footer |
+| **Input validation** | Server-side validation via the same `validators.py` used by the CLI |
+| **REST API** | `POST /api/orders`, `GET /api/orders`, `DELETE /api/orders/{symbol}/{id}` |
+
+### API Endpoints
+
+```
+POST   /api/orders                     — Place a new order
+GET    /api/orders?symbol=BTCUSDT      — List open orders (optional symbol filter)
+DELETE /api/orders/{symbol}/{order_id} — Cancel a specific order
+```
+
+---
+
+## Sample Trading Log
+
+A sample log demonstrating real bot output is included in [`sample_trading_output.txt`](sample_trading_output.txt). It shows:
+
+- ✅ Market BUY order — FILLED
+- ✅ Limit SELL order — NEW
+- ✅ Stop-Market order — NEW
+- ✅ View open orders
+- ✅ Cancel order — CANCELED
+- ❌ Invalid symbol error (`-1121`)
+- ❌ Lot size filter error (`-1013`)
+- ❌ Unknown order cancel error (`-2011`)
+
+All logs are automatically written to `logs/trading_bot.log` during operation. The format is:
+
+```
+2026-04-16 14:22:01,342 | INFO     | bot.client | >>> POST /fapi/v1/order params={...}
+2026-04-16 14:22:01,876 | INFO     | bot.client | <<< POST /fapi/v1/order status=200 body={...}
+```
+
+Sensitive data (signatures) is always stripped before logging.
+
+---
+
 ## Docker
 
 ### Build
@@ -162,14 +237,23 @@ Primetrade/
 │   ├── validators.py       # Input validation with typed errors
 │   ├── orders.py           # Order models and business logic
 │   └── logging_config.py   # Rotating file logger
+├── web/
+│   ├── app.py              # FastAPI REST API + dashboard server
+│   ├── templates/
+│   │   └── index.html      # Single-page trading dashboard
+│   └── static/
+│       ├── style.css        # Dark terminal theme
+│       └── app.js           # Client-side order management
 ├── tests/
 │   ├── test_client.py      # HTTP layer unit tests
 │   ├── test_validators.py  # Validation edge case tests
 │   └── test_orders.py      # Order logic unit tests
+├── screenshots/            # CLI output screenshots
 ├── cli.py                  # Typer + Rich entry point
 ├── Dockerfile              # Multi-stage container build
 ├── .env.example            # Credential template
 ├── requirements.txt        # Pinned dependencies
+├── sample_trading_output.txt # Demo log output
 └── logs/                   # Rotating log output
 ```
 
@@ -183,6 +267,7 @@ Primetrade/
 | **orders** | Business logic layer. Composes validators and client calls, maps Binance error codes to human-readable messages, and returns Pydantic-modelled responses. |
 | **logging** | Centralised rotating file logger. Every request, response, and error is recorded with timestamps. API secrets are stripped before logging. |
 | **cli** | User-facing shell. Handles interactive prompts, Rich table rendering, and confirmation flows. The only layer allowed to use `print`-style output. |
+| **web** | FastAPI dashboard. Thin REST wrapper over `bot/` — exposes the same order operations through a browser UI with zero logic duplication. |
 
 ---
 

@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Primetrade — Trading Dashboard</title>
+    <meta name="description" content="Binance Futures Testnet Trading Dashboard by Primetrade">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <!-- ─── Header ──────────────────────────────────────────────── -->
+    <header class="header">
+        <div class="header-brand">
+            <div class="logo-icon">
+                <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+                    <path d="M14 2L26 8V20L14 26L2 20V8L14 2Z" stroke="url(#grad)" stroke-width="2" fill="none"/>
+                    <path d="M14 8L20 11V17L14 20L8 17V11L14 8Z" fill="url(#grad)" opacity="0.6"/>
+                    <defs><linearGradient id="grad" x1="2" y1="2" x2="26" y2="26">
+                        <stop offset="0%" stop-color="#00f0ff"/>
+                        <stop offset="100%" stop-color="#7b61ff"/>
+                    </linearGradient></defs>
+                </svg>
+            </div>
+            <h1>Primetrade</h1>
+            <span class="badge">TESTNET</span>
+        </div>
+        <div class="header-status">
+            <span class="status-dot" id="statusDot"></span>
+            <span class="status-text" id="statusText">Connecting…</span>
+        </div>
+    </header>
+
+    <main class="dashboard">
+        <!-- ─── Left: Order Form ────────────────────────────────── -->
+        <section class="card order-form-card">
+            <h2 class="card-title">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+                Place Order
+            </h2>
+
+            <form id="orderForm" autocomplete="off">
+                <div class="form-group">
+                    <label for="symbol">Symbol</label>
+                    <input type="text" id="symbol" name="symbol" placeholder="e.g. BTCUSDT" required spellcheck="false">
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Side</label>
+                        <div class="toggle-group" id="sideToggle">
+                            <button type="button" class="toggle-btn buy active" data-value="BUY">BUY</button>
+                            <button type="button" class="toggle-btn sell" data-value="SELL">SELL</button>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="orderType">Type</label>
+                        <select id="orderType" name="orderType">
+                            <option value="MARKET">MARKET</option>
+                            <option value="LIMIT">LIMIT</option>
+                            <option value="STOP_MARKET">STOP MARKET</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="quantity">Quantity</label>
+                    <input type="number" id="quantity" name="quantity" placeholder="0.001" step="any" min="0" required>
+                </div>
+
+                <div class="form-group conditional" id="priceGroup" style="display:none">
+                    <label for="price">Limit Price</label>
+                    <input type="number" id="price" name="price" placeholder="0.00" step="any" min="0">
+                </div>
+
+                <div class="form-group conditional" id="stopPriceGroup" style="display:none">
+                    <label for="stopPrice">Stop Price</label>
+                    <input type="number" id="stopPrice" name="stopPrice" placeholder="0.00" step="any" min="0">
+                </div>
+
+                <button type="submit" class="btn-primary" id="submitBtn">
+                    <span class="btn-text">Place Order</span>
+                    <span class="btn-loader" style="display:none"></span>
+                </button>
+            </form>
+
+            <!-- Toast area -->
+            <div id="toast" class="toast" style="display:none"></div>
+        </section>
+
+        <!-- ─── Right: Open Orders ──────────────────────────────── -->
+        <section class="card orders-card">
+            <div class="card-header">
+                <h2 class="card-title">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+                    Open Orders
+                </h2>
+                <div class="card-actions">
+                    <input type="text" id="filterSymbol" class="filter-input" placeholder="Filter symbol…" spellcheck="false">
+                    <button class="btn-icon" id="refreshBtn" title="Refresh orders">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
+                    </button>
+                </div>
+            </div>
+
+            <div class="table-wrapper">
+                <table id="ordersTable">
+                    <thead>
+                        <tr>
+                            <th>Order ID</th>
+                            <th>Symbol</th>
+                            <th>Side</th>
+                            <th>Type</th>
+                            <th>Qty</th>
+                            <th>Price</th>
+                            <th>Status</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody id="ordersBody">
+                        <tr class="empty-row">
+                            <td colspan="8">
+                                <div class="empty-state">
+                                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.3"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+                                    <p>No open orders</p>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <!-- ─── Footer ──────────────────────────────────────────────── -->
+    <footer class="footer">
+        <span>Primetrade v1.0 • Binance Futures Testnet</span>
+        <span class="footer-dot">•</span>
+        <span id="clock"></span>
+    </footer>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>
