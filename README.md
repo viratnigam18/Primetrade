@@ -20,7 +20,7 @@ A production-grade command-line trading bot for the Binance Futures Testnet. Pla
 ### 1. Clone and enter the project
 
 ```bash
-git clone <repo-url>
+git clone https://github.com/viratnigam18/Primetrade.git
 cd Primetrade
 ```
 
